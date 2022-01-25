@@ -33,74 +33,42 @@ public class DestructionCatalyst extends Item {
     }
 
 
-    private void superBreaker(UseOnContext context){
+    private void superBreaker(UseOnContext context) {
         Level world = context.getLevel();
         BlockPos blockPos = context.getClickedPos();
-        int[] iterateLoop  = {-1,0,1};
+        int[] iterateLoop = {-1, 0, 1};
+        int depth = 0;
+        BlockPos newBlockPos;
 
 
-
-
-
-
-
-
-
-
-        //facing north/south
-        if( context.getClickedFace() == Direction.NORTH || context.getClickedFace() == Direction.SOUTH) {
-            for (int _i : iterateLoop) {
-                for (int _j : iterateLoop) {
-
-                    //changing variables to match the new itterated block
-                    BlockPos newBlockPos = blockPos.offset(_j, _i, 0);
-                    BlockState newClickedBlock = world.getBlockState(newBlockPos);
-
-
-                    if (blockValidToBreak(newClickedBlock, context, world)) {
-                        world.destroyBlock(newBlockPos, true);
-                    }
+        for (int width : iterateLoop) {
+            for (int height : iterateLoop) {
+                if (context.getClickedFace() == Direction.NORTH || context.getClickedFace() == Direction.SOUTH) {
+                    //north-south
+                    //x y z
+                    //width, height, depth
+                    newBlockPos = blockPos.offset(width, height, depth);
+                } else if (context.getClickedFace() == Direction.EAST || context.getClickedFace() == Direction.WEST) {
+                    //east-west
+                    //x y z
+                    //depth, width, height
+                    newBlockPos = blockPos.offset(depth, width, height);
+                } else {
+                    //up-down
+                    //x y z
+                    //width, depth, height
+                    newBlockPos = blockPos.offset(width, depth, height);
                 }
 
-            }
-        }
-
-        //facing east/west
-        if( context.getClickedFace() == Direction.EAST || context.getClickedFace() == Direction.WEST) {
-            for (int _i : iterateLoop) {
-                for (int _j : iterateLoop) {
-
-                    //changing variables to match the new itterated block
-                    BlockPos newBlockPos = blockPos.offset(0, _i, _j);
-                    BlockState newClickedBlock = world.getBlockState(newBlockPos);
+                BlockState newClickedBlock = world.getBlockState(newBlockPos);
 
 
-                    if (blockValidToBreak(newClickedBlock, context, world)) {
-                        world.destroyBlock(newBlockPos, true);
-                    }
-                }
-
-            }
-        }
-
-        //facing up/down
-        if( context.getClickedFace() == Direction.UP || context.getClickedFace() == Direction.DOWN) {
-            for (int _i : iterateLoop) {
-                for (int _j : iterateLoop) {
-
-                    //changing variables to match the new itterated block
-                    BlockPos newBlockPos = blockPos.offset(_i, 0, _j);
-                    BlockState newClickedBlock = world.getBlockState(newBlockPos);
-
-
-                    if (blockValidToBreak(newClickedBlock, context, world)) {
-                        world.destroyBlock(newBlockPos, true);
-                    }
+                if (blockValidToBreak(newClickedBlock, context, world)) {
+                    world.destroyBlock(newBlockPos, true);
                 }
             }
         }
     }
-
 }
 
 
