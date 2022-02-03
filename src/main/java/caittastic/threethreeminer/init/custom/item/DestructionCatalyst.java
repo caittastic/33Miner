@@ -31,7 +31,7 @@ public class DestructionCatalyst extends Item {
         return super.onItemUseFirst(stack, context);
     }
     /*  helpful :)  */
-    //checks if a block should be breakable based on vanilla rules
+    //breaks blocks in a 3x3 tunnel based on facing direction
     private void superBreaker(UseOnContext context) {
         Level world = context.getLevel();
         BlockPos blockPos = context.getClickedPos();
@@ -122,23 +122,26 @@ public class DestructionCatalyst extends Item {
             }
         }
     }
+
+    //breaks blocks in a 1x1x9 tunnel in one direction
     private void simpleBreaker(UseOnContext context) {
         Level world = context.getLevel();
         context.getPlayer().getDirection();
         BlockPos blockPos = context.getClickedPos();
+
         int[] itterateDepth = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
         BlockPos newBlockPos;
-
         for(int depth : itterateDepth){
             //width, height, depth
             newBlockPos = blockPos.offset(0, 0, depth);
             BlockState newClickedBlock = world.getBlockState(newBlockPos);
 
-            if (newClickedBlock.getDestroySpeed(world,context.getClickedPos()) > 0f) {
+            if (blockValidToBreak(newClickedBlock,context,world)) {
                 world.destroyBlock(newBlockPos, true);
             }
         }
     }
+    //checks if a block should be breakable based on vanilla rules
     private boolean blockValidToBreak(BlockState clickedBlock, UseOnContext context, Level world) {
         BlockPos blockpos = context.getClickedPos();
         return clickedBlock.getDestroySpeed(world,context.getClickedPos()) > 0f;
