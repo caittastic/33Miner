@@ -25,9 +25,7 @@ public class DestructionCatalyst extends Item {
     public InteractionResult onItemUseFirst(ItemStack stack, UseOnContext context) {
         Level world = context.getLevel();
         context.getPlayer().getDirection();
-        if (!world.isClientSide){
-            simpleBreaker(context);
-        }
+        superBreaker(context);
         return super.onItemUseFirst(stack, context);
     }
     /*  helpful :)  */
@@ -35,95 +33,38 @@ public class DestructionCatalyst extends Item {
     private void superBreaker(UseOnContext context) {
         Level world = context.getLevel();
         BlockPos blockPos = context.getClickedPos();
-        int[] iterateWidthHeight = {-1, 0, 1};
-        int[] itterateDepth = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-        int[] negativeItterateDepth = {0, -1, -2, -3, -4, -5, -6, -7, -8, -9};
         Direction clickedFace = context.getClickedFace();
-        BlockPos newBlockPos;
+        BlockPos newBlockPos = blockPos;
 
-        for (int width : iterateWidthHeight) {
-            for (int height : iterateWidthHeight) {
-                if (clickedFace == Direction.NORTH || clickedFace == Direction.SOUTH) {
-                    if(clickedFace == Direction.NORTH){
-                        for(int depth : itterateDepth){
-                            //width, height, depth
-                            newBlockPos = blockPos.offset(width, height, depth);
-                            BlockState newClickedBlock = world.getBlockState(newBlockPos);
-
-                            if (blockValidToBreak(newClickedBlock, context, world)) {
-                                world.destroyBlock(newBlockPos, true);
-                            }
-                        }
+        for (int w = -1; w <= 1; w++ ) {
+            for (int h = -1; h <= 1; h++) {
+                for (int offs = 9; offs <=0; offs--) {
+                    BlockState newClickedBlock = world.getBlockState(newBlockPos);
+                    if (blockValidToBreak(newClickedBlock, context, world)) {
+                        world.destroyBlock(newBlockPos, true);
                     }
-
-                    else{
-                        for(int depth : negativeItterateDepth){
-                            //width, height, depth
-                            newBlockPos = blockPos.offset(width, height, depth);
-                            BlockState newClickedBlock = world.getBlockState(newBlockPos);
-
-                            if (blockValidToBreak(newClickedBlock, context, world)) {
-                                world.destroyBlock(newBlockPos, true);
-                            }
-                        }
-                    }
-
-                } 
-                else if (clickedFace == Direction.EAST || clickedFace == Direction.WEST) {
-
-                    if(clickedFace == Direction.WEST){
-                        for(int depth : itterateDepth){
-                            //depth, width, height
-                            newBlockPos = blockPos.offset(depth, width, height);
-                            BlockState newClickedBlock = world.getBlockState(newBlockPos);
-                            if (blockValidToBreak(newClickedBlock, context, world)) {
-                                world.destroyBlock(newBlockPos, true);
-                            }
-                        }
-                    }
-
-                    else{
-                        for(int depth : negativeItterateDepth){
-                            //depth, width, height
-                            newBlockPos = blockPos.offset(depth, width, height);
-                            BlockState newClickedBlock = world.getBlockState(newBlockPos);
-                            if (blockValidToBreak(newClickedBlock, context, world)) {
-                                world.destroyBlock(newBlockPos, true);
-
-                            }
-                        }
-                    }
-
-                } 
-                else {
-                    if(clickedFace == Direction.DOWN){
-                        for(int depth : itterateDepth){
-                            //width, depth, height
-                            newBlockPos = blockPos.offset(width, depth, height);
-                            BlockState newClickedBlock = world.getBlockState(newBlockPos);
-                            if (blockValidToBreak(newClickedBlock, context, world)) {
-                                world.destroyBlock(newBlockPos, true);
-                            }
-                        }
-                    }
-                    else{
-                        for(int depth : negativeItterateDepth){
-                            //width, depth, height
-                            newBlockPos = blockPos.offset(width, depth, height);
-                            BlockState newClickedBlock = world.getBlockState(newBlockPos);
-                            if (blockValidToBreak(newClickedBlock, context, world)) {
-                                world.destroyBlock(newBlockPos, true);
-                            }
-                        }
-                    }
+                    newBlockPos = offsetPos(clickedFace, newBlockPos);
                 }
-
-                
             }
         }
     }
 
+    private BlockPos offsetPos( Direction dir, BlockPos current ) {
+        // offset to the opposite the direction of the clicked face
+        // because if we're clicking that face, we're facing the opposite direction
+
+        return switch (dir) {
+            case NORTH -> current.south();
+            case SOUTH -> current.north();
+            case EAST -> current.west();
+            case WEST -> current.east();
+            case UP -> current.below();
+            case DOWN -> current.above();
+        };
+    }
+
     //breaks blocks in a 1x1x9 tunnel in one direction
+    //is not supposed to be used, just example code
     private void simpleBreaker(UseOnContext context) {
         Level world = context.getLevel();
         context.getPlayer().getDirection();
