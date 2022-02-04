@@ -30,37 +30,69 @@ public class DestructionCatalyst extends Item {
     }
     /*  helpful :)  */
     //breaks blocks in a 3x3 tunnel based on facing direction
-    private void superBreaker(UseOnContext context) {
+    private void superBreaker (UseOnContext context){
         Level world = context.getLevel();
         BlockPos blockPos = context.getClickedPos();
         Direction clickedFace = context.getClickedFace();
-        BlockPos newBlockPos = blockPos;
+        BlockPos newBlockPos = offsetBlockPos(clickedFace, blockPos, true);
+        int depth = 9;
 
-        for (int w = -1; w <= 1; w++ ) {
-            for (int h = -1; h <= 1; h++) {
-                for (int offs = 9; offs <=0; offs--) {
-                    BlockState newClickedBlock = world.getBlockState(newBlockPos);
+
+        for (int count = 0; count < depth; count++) {
+            newBlockPos = offsetBlockPos(clickedFace, newBlockPos,false);
+            BlockPos targetPos = newBlockPos;
+            for (int w = -1; w <= 1; w++) { // across the row
+                for (int h = -1; h <= 1; h++) { // across the column
+                    BlockState newClickedBlock = world.getBlockState(targetPos);
                     if (blockValidToBreak(newClickedBlock, context, world)) {
-                        world.destroyBlock(newBlockPos, true);
+                        world.destroyBlock(targetPos, true);
                     }
-                    newBlockPos = offsetPos(clickedFace, newBlockPos);
+                    targetPos = offsetForArea(clickedFace, newBlockPos, w, h);
                 }
             }
+
         }
     }
 
-    private BlockPos offsetPos( Direction dir, BlockPos current ) {
-        // offset to the opposite the direction of the clicked face
-        // because if we're clicking that face, we're facing the opposite direction
 
-        return switch (dir) {
-            case NORTH -> current.south();
-            case SOUTH -> current.north();
-            case EAST -> current.west();
-            case WEST -> current.east();
-            case UP -> current.below();
-            case DOWN -> current.above();
-        };
+    private BlockPos offsetForArea( Direction dir, BlockPos currentPosition, int row, int column ) {
+        // no default case - this covers all possible values
+        switch (dir) {
+            case NORTH:
+            case SOUTH:
+                return currentPosition.offset(row, column, 0);
+            case EAST:
+            case WEST:
+                return currentPosition.offset(0, row, column);
+            case UP:
+            case DOWN:
+                return currentPosition.offset(row, 0, column);
+        }
+        return currentPosition;
+    }
+
+    private BlockPos offsetBlockPos(Direction direction, BlockPos blockPos, Boolean towardsPlayer){
+        //ofsets the blockpos in the direction of the clicked face if towardsPlayer is true
+        if(towardsPlayer == true){
+            return switch (direction) {
+                case NORTH -> blockPos.north();
+                case SOUTH -> blockPos.south();
+                case EAST -> blockPos.east();
+                case WEST -> blockPos.west();
+                case UP -> blockPos.above();
+                case DOWN -> blockPos.below();
+            };
+        }else{
+            return switch (direction) {
+                case NORTH -> blockPos.south();
+                case SOUTH -> blockPos.north();
+                case EAST -> blockPos.west();
+                case WEST -> blockPos.east();
+                case UP -> blockPos.below();
+                case DOWN -> blockPos.above();
+            };
+        }
+
     }
 
     //breaks blocks in a 1x1x9 tunnel in one direction
