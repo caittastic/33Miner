@@ -1,6 +1,7 @@
 package caittastic.threethreeminer.init;
 
 import caittastic.threethreeminer.init.custom.item.DestructionCatalyst;
+import caittastic.threethreeminer.init.custom.item.DestructionCatalystCopy;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.registries.DeferredRegister;
@@ -15,7 +16,7 @@ public class ItemInit {
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MOD_ID);
 
     public static final RegistryObject<Item> DESTRUCTION_CATALYST = ITEMS.register("destruction_catalyst",
-            () -> new DestructionCatalyst(new Item.Properties().tab(CreativeModeTab.TAB_TOOLS).stacksTo(1)));
+            () -> new DestructionCatalystCopy(new Item.Properties().tab(CreativeModeTab.TAB_TOOLS).stacksTo(1)));
 
 
 
