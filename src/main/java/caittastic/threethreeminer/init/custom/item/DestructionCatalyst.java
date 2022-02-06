@@ -92,6 +92,7 @@ public class DestructionCatalyst extends Item {
         BlockState clickedBlock = world.getBlockState(clickedBlockPos);
 
         return clickedBlock.getDestroySpeed(world, context.getClickedPos()) > 0f &&
+                clickedBlock.getDestroySpeed(world, context.getClickedPos()) <= 50 &&
                 isBlockSpawnProtected(context.getPlayer(),context.getClickedPos())&&
                 ForgeHooks.onBlockBreakEvent(player.getCommandSenderWorld(), player.gameMode.getGameModeForPlayer(), player, clickedBlockPos) != -1;
     }
@@ -118,14 +119,14 @@ public class DestructionCatalyst extends Item {
     }
 
     private void compressStacksAndGiveToPlayer(List<ItemStack> drops, Level world, Player player) {
-        for (int i = 0; i < drops.size(); i++ ) {
-            ItemStack itemStackToCheckAgainst = drops.get(i);
-            if (!itemStackToCheckAgainst.isEmpty()) {
-                for (int k = i; k < drops.size(); ++k) {
-                    ItemStack itemStackToCheckWith = drops.get(k);
-                    if (ItemHandlerHelper.canItemStacksStack(itemStackToCheckAgainst, itemStackToCheckWith)) {
-                        itemStackToCheckAgainst.grow(itemStackToCheckWith.getCount());
-                        drops.set(k, ItemStack.EMPTY);
+        for (int i = 0; i < drops.size(); i++) {
+            ItemStack stackOne = drops.get(i);
+            if(!stackOne.isEmpty()){
+                for (int j = i + 1; j < drops.size(); j++) {
+                    ItemStack stackTwo = drops.get(j);
+                    if(ItemHandlerHelper.canItemStacksStack(stackOne, stackTwo)){
+                        stackOne.grow(stackTwo.getCount());
+                        drops.set(j, ItemStack.EMPTY);
                     }
                 }
             }
