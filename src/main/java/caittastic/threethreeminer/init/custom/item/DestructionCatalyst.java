@@ -3,6 +3,7 @@ package caittastic.threethreeminer.init.custom.item;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -51,17 +52,19 @@ public class DestructionCatalyst extends Item {
         int[] iterateWidthHeight = {-1, 0, 1};
         int depth = 9;
         Direction clickedFace = context.getClickedFace();
+        List<ItemStack> drops = new LinkedList<>();
 
         for (int width : iterateWidthHeight) {
             for (int height : iterateWidthHeight) {
                 for (int d = 0; d <= (depth - 1); d++) {
                     newBlockPos = offsetBlock(blockPos, clickedFace, width, height, d);
                     BlockState newClickedBlock = world.getBlockState(newBlockPos);
-                    breakAndGivePlayerItems(newBlockPos, context);
+                    drops.addAll(breakAndAddLoTooList(newBlockPos, context));
 
                 }
             }
         }
+        compressStacksAndGiveToPlayer(drops, world, context.getPlayer());
     }
 
     private BlockPos offsetBlock(BlockPos blockToOffset, Direction clickedDirection, int width, int height, int depth) {
@@ -101,37 +104,43 @@ public class DestructionCatalyst extends Item {
         return Arrays.stream(Direction.values()).allMatch(e -> player.mayUseItemAt(pos, e, ItemStack.EMPTY));
     }
 
-    private void breakAndGivePlayerItems( BlockPos bopo, UseOnContext context){
+    private List<ItemStack> breakAndAddLoTooList( BlockPos bopo, UseOnContext context){
         List<ItemStack> drops = new LinkedList<>();
         Level world = context.getLevel();
         BlockState newClickedBlock = world.getBlockState(bopo);
         Player player = context.getPlayer();
         if(blockValidToBreak(bopo, context, world)){
-            drops.addAll(Block.getDrops(newClickedBlock, (ServerLevel) world, bopo, world.getBlockEntity(bopo), context.getPlayer(), context.getItemInHand() ));
             world.destroyBlock(bopo, false);
+            return Block.getDrops(newClickedBlock, (ServerLevel) world, bopo, world.getBlockEntity(bopo), context.getPlayer(), context.getItemInHand() );
         }
-        for(int i = 0; i < drops.size(); i++){
-            ItemStack itemToStackOn = drops.get(i);
-            if(!itemToStackOn.isEmpty()){
-                for(int k = i; k <drops.size(); k++){
-                    ItemStack itemToCheckWith = drops.get(k);
-                    if(ItemHandlerHelper.canItemStacksStack(itemToStackOn, itemToCheckWith)){
-                        itemToStackOn.grow(itemToCheckWith.getCount());
-                        drops.set(k,ItemStack.EMPTY);
+
+        return drops;
+    }
+
+    private void compressStacksAndGiveToPlayer(List<ItemStack> drops, Level world, Player player) {
+        for (int i = 0; i < drops.size(); i++ ) {
+            ItemStack itemStackToCheckAgainst = drops.get(i);
+            if (!itemStackToCheckAgainst.isEmpty()) {
+                for (int k = i; k < drops.size(); ++k) {
+                    ItemStack itemStackToCheckWith = drops.get(k);
+                    if (ItemHandlerHelper.canItemStacksStack(itemStackToCheckAgainst, itemStackToCheckWith)) {
+                        itemStackToCheckAgainst.grow(itemStackToCheckWith.getCount());
+                        drops.set(k, ItemStack.EMPTY);
                     }
                 }
             }
         }
 
+        drops.removeIf(ItemStack::isEmpty);
 
+        int itemCreateX = player.getBlockX();
+        int itemCreateY = player.getBlockY();
+        int itemCreateZ = player.getBlockZ();
 
-
-
-        for (ItemStack item :drops) {
-            if (!player.getInventory().add(item)) {
-                player.drop(item, false);
-            }
+        for (ItemStack item : drops) {
+            world.addFreshEntity(new ItemEntity(world,itemCreateX,itemCreateY,itemCreateZ, item));
         }
+
     }
 }
 
