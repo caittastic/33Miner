@@ -1,5 +1,8 @@
 package caittastic.threethreeminer.init.custom.item;
 
+import net.minecraft.Util;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -27,7 +30,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class DestructionCatalyst extends Item {
-
     public DestructionCatalyst(Properties properties) {
         super(properties);
     }
@@ -36,8 +38,37 @@ public class DestructionCatalyst extends Item {
     public InteractionResult onItemUseFirst(ItemStack stack, UseOnContext context) {
         Level world = context.getLevel();
         context.getPlayer().getDirection();
+        CompoundTag tag = new CompoundTag();
         if(!world.isClientSide){
-            superBreaker(context);
+            if(!stack.hasTag()){
+                tag.putInt("charge", 1);
+                stack.setTag(tag);
+            }
+
+            if(context.getPlayer().isShiftKeyDown()){
+                switch (stack.getTag().getInt("charge")){
+                    case 1 :
+                        stack.getTag().putInt("charge", 4);
+                        context.getPlayer().sendMessage(new TextComponent("Charge: "+stack.getTag().getInt("charge")), Util.NIL_UUID);
+                        break;
+                    case 4 :
+                        stack.getTag().putInt("charge", 9);
+                        context.getPlayer().sendMessage(new TextComponent("Charge: "+stack.getTag().getInt("charge")), Util.NIL_UUID);
+                        break;
+                    case 9 :
+                        stack.getTag().putInt("charge", 16);
+                        context.getPlayer().sendMessage(new TextComponent("Charge: "+stack.getTag().getInt("charge")), Util.NIL_UUID);
+                        break;
+                    case 16 :
+                        stack.getTag().putInt("charge", 1);
+                        context.getPlayer().sendMessage(new TextComponent("Charge: "+stack.getTag().getInt("charge")), Util.NIL_UUID);
+                        break;
+                }
+
+            }
+            else{
+                superBreaker(context, stack.getTag().getInt("charge"));
+            }
         }
         return super.onItemUseFirst(stack, context);
     }
@@ -45,19 +76,18 @@ public class DestructionCatalyst extends Item {
     //  helpful :)
     //checks if a block should be breakable based on vanilla rules
 
-    private void superBreaker(UseOnContext context) {
+    private void superBreaker(UseOnContext context, int charge) {
         Level world = context.getLevel();
         BlockPos blockPos = context.getClickedPos();
         BlockPos newBlockPos;
         int[] iterateWidthHeight = {-1, 0, 1};
-        int depth = 9;
         Direction clickedFace = context.getClickedFace();
         List<ItemStack> drops = new LinkedList<>();
 
         for (int width : iterateWidthHeight) {
             for (int height : iterateWidthHeight) {
-                for (int d = 0; d <= (depth - 1); d++) {
-                    newBlockPos = offsetBlock(blockPos, clickedFace, width, height, d);
+                for (int depth = 0; depth <= (charge - 1); depth++) {
+                    newBlockPos = offsetBlock(blockPos, clickedFace, width, height, depth);
                     BlockState newClickedBlock = world.getBlockState(newBlockPos);
                     drops.addAll(breakAndAddLoTooList(newBlockPos, context));
 
